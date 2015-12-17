@@ -25,7 +25,6 @@ using namespace std;
 #define LAMP_MESH "../Mesh/lamp.obj"
 #define SCREEN_MESH "../Mesh/screen.obj"
 #define SPIKE_MESH "../Mesh/spike.obj"
-#define BED_MESH "../Mesh/Bed.obj"
 #define THRONE_MESH "../Mesh/throne.obj"
 #define BOTTLE_MESH "../Mesh/potion.obj"
 #define PILLAR_MESH "../Mesh/pillar.obj"
@@ -34,7 +33,6 @@ using namespace std;
 #define R_ARM_SLUG "../Mesh/r_arm_slug.obj"
 #define SLUG "../Mesh/slug.obj"
 #define SLUG_F2 "../Mesh/slug_f2.obj"
-#define SWORD "../Mesh/sword.obj"
 #define AXE  "../Mesh/Axe.obj"
 
 //texture location
