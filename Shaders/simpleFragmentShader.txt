@@ -1,0 +1,144 @@
+#version 420
+
+in vec3 position_eye;
+in vec3 normal_eye;
+in vec3 light_position_eye;
+in vec3 view_dir_tan;
+in vec3 light_dir_tan;
+
+in vec2 texture_coord;
+in float scale_value;
+
+vec3 Ks = vec3(1, 1, 1); // specular reflectance
+vec3 Kd = vec3(0.64,0.64, 0.64); // diffuse reflectance
+vec3 Ka = vec3(1, 1, 1); // ambient reflectance
+uniform float tex_num;
+
+uniform sampler2D basic_texture;
+uniform sampler2D spec_texture;
+uniform sampler2D normal_texture;
+uniform sampler2D  diffuse_texture; //if objects have seperate diffuse texture
+
+//out vec4 frag_colour;
+
+vec3 Ls = vec3 (1.0, 1.0, 1.0); //white specular color
+vec3 Ld = vec3 (1.0, 1.0, 1.0); // dull white diffuse light 
+vec3 La = vec3 (0.2,0.2,0.2);  // grey ambient color
+float specular_exponent = 100.0; //specular 'power'?
+float const_att = 1;
+float linear_att = 0.1;
+float quad_att = 0.009;
+float light_radius = 25;
+
+vec2 flipped_st = vec2 (texture_coord.s, 1.0- texture_coord.t);  //flipping the textures because opengl and 3d modelers use different tings
+
+//fog variables
+vec4 fog_colour = vec4 (0, 0, 0, 1.0);
+float min_fog_radius = 20;
+float max_fog_radius = 30;
+
+vec4 texel;
+void main(){
+    
+   if(tex_num == 1){
+        texel = texture(basic_texture, flipped_st); 
+        //texel.rgb = pow (texel.rgb, vec3(2.2, 2.2, 2.2));
+        //ambient
+        vec3 Ia = La * Ka;
+        
+        //diffuse
+        vec3 distance_to_light_eye = light_position_eye - position_eye;
+        vec3 direction_to_light_eye = normalize(distance_to_light_eye);
+        float dot_prod = dot(direction_to_light_eye, normal_eye);
+        dot_prod = max(dot_prod, 0.0);
+        Kd = texel.rgb;
+        vec3 Id = Ld * Kd * dot_prod; 
+        
+       
+        //specular intensity
+        vec3 reflection_eye = reflect(-direction_to_light_eye, normal_eye);
+        vec3 surface_to_viewer_eye = normalize(-position_eye);
+        float dot_prod_specular = dot(reflection_eye, surface_to_viewer_eye);
+        dot_prod_specular = max(dot_prod_specular, 0.0);
+        float specular_factor = pow(dot_prod_specular, specular_exponent);
+        vec3 Is = Ls * Ks * specular_factor;    
+        
+    
+        vec4 frag_color = vec4(Is + Id + Ia, 1.0);          
+        
+        //fog calculations
+        float dist = length (-position_eye);
+        //fog factor based on distance 
+        float fog_fac = (dist - min_fog_radius) / (max_fog_radius - min_fog_radius);
+        //constrain between 0 and 1
+        fog_fac = clamp (fog_fac, 0.0, 1.0);
+        
+        //attentuation calculations
+        float attentuation = const_att + linear_att*dist + quad_att*dist*dist;
+        //float attentuation_radius = clamp(1.0 - dist/light_radius, 0.0, 1.0);
+        //attentuation *= attentuation_radius;
+        
+        Id = Id/attentuation;
+        //Ia = Ia/attentuation;
+        Is = Is/attentuation;
+        vec4 output_color = frag_color*texel;
+        gl_FragColor = mix (output_color, fog_colour, fog_fac);
+        gl_FragColor =  output_color;
+    }
+    else {
+    
+        texel = texture(basic_texture, flipped_st);
+        //texel.rgb = pow (texel.rgb, vec3(2.2, 2.2, 2.2));
+        
+        vec3 Ia = vec3 (0.2, 0.2, 0.2);
+	
+        // sample the normal map and covert from 0:1 range to -1:1 range
+        vec3 normal_tan = texture (normal_texture, flipped_st).rgb;
+        normal_tan = normalize (normal_tan * 2.0 - 1.0);
+         
+        //gl_FragColor.rgb = light_dir_tan.xyz;
+        // diffuse light equation done in tangent space
+        vec3 direction_to_light_tan = normalize (-light_dir_tan);
+        float dot_prod = dot (direction_to_light_tan, normal_tan);
+        dot_prod = max (dot_prod, 0.0);
+        if(tex_num == 4)
+            Kd = texture(diffuse_texture, flipped_st).rgb;
+        else    
+            Kd = texel.rgb;
+        vec3 Id = Ld * Kd * dot_prod;
+        
+        
+        // specular light equation done in tangent space
+        vec3 reflection_tan = reflect (normalize (light_dir_tan), normal_tan);
+        float dot_prod_specular = dot (reflection_tan, normalize (view_dir_tan));
+        dot_prod_specular = max (dot_prod_specular, 0.0);
+        float specular_factor = pow (dot_prod_specular, 100.0);
+        if(tex_num >= 3){
+            Ks = texture(spec_texture, flipped_st).rgb;
+            //Ld = vec3 (1.0, 0.5, 0.0);
+        }
+        vec3 Is = Ls * Ks * specular_factor;
+        
+        //fog calculations
+        float dist = length (-position_eye);
+        //fog factor based on distance 
+        float fog_fac = (dist - min_fog_radius) / (max_fog_radius - min_fog_radius);
+        //constrain between 0 and 1
+        fog_fac = clamp (fog_fac, 0.0, 1.0);
+        
+        //attentuation calculations
+        float attentuation = const_att + linear_att*dist + quad_att*dist*dist;
+        //float attentuation_radisu = clamp(1.0 - dist/light_radius, 0.0, 1.0);
+        //attentuation *= attentuation_radisu;
+        
+        
+        Id = Id/attentuation;
+        //Ia = Ia/attentuation;
+        Is = Is/attentuation;
+        vec4 output_color = texel*vec4((Is + Id + Ia),1.0);
+        gl_FragColor = mix (output_color, fog_colour, fog_fac);       
+        //gl_FragColor.rgb = texel*(Is + Id + Ia);
+        //gl_FragColor.a = 1.0;
+    
+    }
+}

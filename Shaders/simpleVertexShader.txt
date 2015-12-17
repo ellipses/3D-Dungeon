@@ -1,0 +1,65 @@
+#version 420
+
+in vec3 vertex_position;
+in vec3 vertex_normal;
+in vec2 vertex_texture;
+in vec4 vtangent;
+
+out vec3 position_eye;
+out vec3 normal_eye;
+out vec2 texture_coord;
+out float scale_value;
+out vec3 view_dir_tan;
+out vec3 light_dir_tan;
+
+uniform vec4 LightPosition; // Light position in world coords
+out vec3 light_position_eye;
+
+uniform mat4 view;
+uniform mat4 proj;
+uniform mat4 model;
+uniform float scale_factor;
+
+void main(){
+  vec3 norm_vertex_normal = vec3(vertex_normal/scale_factor);
+  position_eye = vec3(view*model*vec4(vertex_position, 1.0));
+  normal_eye = vec3(view*model*vec4(norm_vertex_normal, 0.0));  //shrinking the normal to compensate when multiplying by scaled model
+  light_position_eye = vec3(view * LightPosition);
+     
+  scale_value = scale_factor; 
+  texture_coord = vertex_texture;
+  //gl_Position = proj* vec4(position_eye, 1.0);
+  gl_Position = proj* view* model* vec4 (vertex_position, 1.0);
+  
+ //for normal mapping
+  
+ // getting camera position in world space, could also just pass in a another uniform instead
+  vec3 cam_pos_wor = (inverse (view) * vec4 (0.0, 0.0, 0.0, 1.0)).xyz;
+  vec3 light_dir_wor = -normalize(LightPosition.xyz - vec3( model*vec4(vertex_position, 1.0)));
+  vec3 bitangent = cross (norm_vertex_normal, vtangent.xyz) * vtangent.w;  
+    
+  /* transform our camera and light uniforms into local space */
+  vec3 cam_pos_loc = vec3 (inverse (model) * vec4 (cam_pos_wor, 1.0));
+  vec3 light_dir_loc =  vec3 (inverse (model) * vec4 (light_dir_wor, 0.0));
+  // and work out view _direction_ in local space
+  vec3 view_dir_loc = normalize (cam_pos_loc - vertex_position);
+  
+  /* this [dot,dot,dot] is the same as making a 3x3 inverse tangent matrix, and
+      doing a matrix*vector multiplication.
+  */
+  // work out view direction in _tangent space_
+  view_dir_tan = vec3 (
+      dot (vtangent.xyz, view_dir_loc),
+      dot (bitangent, view_dir_loc),
+      dot (norm_vertex_normal, view_dir_loc)
+  );
+  // work out light direction in _tangent space_
+  light_dir_tan = vec3 (
+      dot (vtangent.xyz, light_dir_loc),
+      dot (bitangent, light_dir_loc),
+      dot (norm_vertex_normal, light_dir_loc)
+  );  
+}
+
+
+  

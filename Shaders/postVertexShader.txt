@@ -1,0 +1,20 @@
+#version 420
+
+layout(location = 0) in vec2 vertex_position; 
+
+//per vertex texture coordinates input attribute
+layout(location = 1) in vec2 vt;
+
+//textue coordiantes to be interpolated to fragment shaders
+out vec2 st;
+
+void main(){
+    //interpolate texture coordinates
+    st = (vertex_position + 1.0) * 0.5;
+    //transform vertex positions to clip space
+    gl_Position = vec4 (vertex_position, 0.0, 1.0);
+    
+}
+
+
+  
