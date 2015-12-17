@@ -13,7 +13,7 @@
 using namespace std;
 
 /*----------------------------------------------------------------------------
-                   MES, TEXTURES AND SHADERS TO LOAD
+                   MESH, TEXTURES AND SHADERS TO LOAD
   ----------------------------------------------------------------------------*/
 
 #define WOLF_MESH "../Mesh/wolf.obj"
@@ -103,7 +103,7 @@ int height = 600;
 GLfloat rotate_y = 0.0f;
 
 //camera variables
-bool firstmouse = true; //for handling the suddent jump on first movement
+bool firstmouse = true; //for handling the sudden jump on first movement
 vec3 camerapos = vec3(0.0f,0.0f, -10.0f);
 vec3 initialpos; //starting position on the map
 vec3 camerafront = vec3(0.0f, 0.0f, 1.0f);
@@ -132,7 +132,7 @@ int test = 4;
 //input stuff
 GLfloat lastx = width/2;
 GLfloat lasty = height/2; 
-GLfloat yaw = 90.0f;  //yaw set to -90 because yaw of 0.0 points to right or something wierd happens in euler angles
+GLfloat yaw = 90.0f;  //yaw set to 90 because yaw of 0.0 points to right 
 GLfloat pitch = 0.0f;
 GLfloat mouse_sensitivity  = 0.5f; //increase to increase sensitivity
 GLfloat keyboard_sensitivity  = 0.09;
@@ -359,7 +359,7 @@ void draw_map(mat4 origin, mat4 current, int matrix_location)
 	int layer_num = 0;
 
 	//make sure that the last model assignment before current assigment doesnt change y value 
-	//or the rest of the map with be floating
+	//or the rest of the map will be floating
 	
 	for(int val = 0; val < (map_height*map_width); val++){
 		
