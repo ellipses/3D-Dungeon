@@ -1,0 +1,21 @@
+Map related stuff
+
+
+//converting from z and x to row and col
+//adjust by scale factor*2, add(because map is in minus) 1 because of origin offset, find mod to get pos
+int row = -1*(int)(((float)z_pos/(scale_factor*2)) + 1)%map_height; 
+int col = -1*(int)(((float)x_pos/(scale_factor*2)) + 1)%map_width; 
+
+//converting from row and col to z and x_pos/
+//multiply by scalefactor times 2, add 1 for offset, multiply by -1 
+
+
+Game reads the red channel
+black = 256 = Wall
+White = 0= Floor
+green = 3 = Floor spike_trap 
+blue = 2 = starting position with wall
+dark green thing = 50 = pillar 
+violet = 20 = Winning spot
+pink = 200 = health
+brown = 75 = enemy
